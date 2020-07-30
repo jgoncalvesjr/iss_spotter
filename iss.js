@@ -41,7 +41,7 @@ const fetchMyIP = (callback) => {
  */
 
 const fetchCoordsByIP = (ip, callback) => {
-  request('https://ipvigilante.com/174.93.84.171', (error, response, body) => {
+  request(`https://ipvigilante.com/${ip}`, (error, response, body) => {
     if (error) {
       callback(error, null);
       return;
@@ -86,5 +86,36 @@ const fetchISSFlyOverTimes = function(coords, callback) {
   });
 };
 
+/**
+ * Orchestrates multiple API requests in order to determine the next 5 upcoming ISS fly overs for the user's current location.
+ * Input:
+ *   - A callback with an error or results. 
+ * Returns (via Callback):
+ *   - An error, if any (nullable)
+ *   - The fly-over times as an array (null if error):
+ *     [ { risetime: <number>, duration: <number> }, ... ]
+ */ 
 
-module.exports = { fetchMyIP, fetchCoordsByIP, fetchISSFlyOverTimes };
+const nextISSTimesForMyLocation = (callback) => {
+  fetchMyIP((error, ip) => {
+    if (error) {
+      return callback(error, null);
+    }
+
+    fetchCoordsByIP(ip, (error, coords) => {
+      if (error) {
+        return callback(error, null);
+      }
+
+      fetchISSFlyOverTimes(coords, (error, FlyOverTimes) => {
+        if (error) {
+          return callback(error, null);
+        }
+
+        callback(null, FlyOverTimes);
+      });
+    });
+  });
+};
+
+module.exports = { nextISSTimesForMyLocation };
